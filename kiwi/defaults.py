@@ -667,6 +667,7 @@ class Defaults:
         """
         return [
             '/usr/share/syslinux',
+            '/usr/lib/syslinux/bios',
             '/usr/lib/syslinux/modules/bios',
             '/usr/lib/ISOLINUX'
         ]
@@ -1465,6 +1466,8 @@ class Defaults:
             return 'rpm'
         elif package_manager in deb_based:
             return 'dpkg'
+        elif package_manager == 'pacman':
+            return 'pacman'
 
     def get(self, key):
         """

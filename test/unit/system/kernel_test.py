@@ -19,13 +19,21 @@ class TestKernel:
             'zImage-1.2.3-default',
             'vmlinuz-1.2.3-default',
             'image-1.2.3-default',
-            'vmlinux-1.2.3-default'
+            'vmlinux-1.2.3-default',
+            'vmlinuz-linux-1.2.3-default',
         ]
 
     def test_get_kernel_raises_if_no_kernel_found(self):
         self.kernel.kernel_names = []
         with raises(KiwiKernelLookupError):
             self.kernel.get_kernel(raise_on_not_found=True)
+
+    @patch('os.path.exists')
+    def test_get_kernel_no_version_in_file_name(self, mock_exists):
+        mock_exists.side_effect = lambda x: x == 'root-dir/boot/vmlinuz-linux'
+        kernel = self.kernel.get_kernel(raise_on_not_found=True)
+        assert kernel.name == 'vmlinuz-linux'
+        assert kernel.version == '1.2.3-default'
 
     @patch('os.path.exists')
     @patch('os.path.realpath')

@@ -36,6 +36,14 @@ class Kernel:
         names in this code
     """
     def __init__(self, root_dir):
+        # append lookup for the real kernel image names
+        # depending on the arch and os they are different
+        # in their prefix
+        self.kernel_prefixes = [
+            'uImage', 'Image', 'zImage', 'vmlinuz',
+            'image', 'vmlinux', 'vmlinuz-linux'
+        ]
+        self.kernel_dirs = []
         self.root_dir = root_dir
         self.kernel_names = self._setup_kernel_names_for_lookup()
 
@@ -52,6 +60,10 @@ class Kernel:
 
         :rtype: namedtuple
         """
+        kernel = namedtuple(
+            'kernel', ['name', 'filename', 'version']
+        )
+
         for kernel_name in self.kernel_names:
             kernel_file = os.sep.join(
                 [self.root_dir, 'boot', kernel_name]
@@ -62,14 +74,22 @@ class Kernel:
                 )
                 if version_match:
                     version = version_match.group(1)
-                    kernel = namedtuple(
-                        'kernel', ['name', 'filename', 'version']
-                    )
                     return kernel(
                         name=os.path.basename(os.path.realpath(kernel_file)),
                         filename=kernel_file,
                         version=version
                     )
+
+        for kernel_name in self.kernel_prefixes:
+            kernel_file = os.sep.join(
+                [self.root_dir, 'boot', kernel_name]
+            )
+            if os.path.exists(kernel_file) and not os.path.islink(kernel_file):
+                return kernel(
+                    name=os.path.basename(os.path.realpath(kernel_file)),
+                    filename=kernel_file,
+                    version=self.kernel_dirs[0]
+                )
 
         if raise_on_not_found:
             raise KiwiKernelLookupError(
@@ -146,19 +166,13 @@ class Kernel:
         :rtype: list
         """
         kernel_names = []
-        kernel_dirs = sorted(
+        self.kernel_dirs = sorted(
             os.listdir(''.join([self.root_dir, '/lib/modules']))
         )
-        if kernel_dirs:
-            # append lookup for the real kernel image names
-            # depending on the arch and os they are different
-            # in their prefix
-            kernel_prefixes = [
-                'uImage', 'Image', 'zImage', 'vmlinuz', 'image', 'vmlinux'
-            ]
+        if self.kernel_dirs:
             kernel_name_pattern = '{prefix}-{name}'
-            for kernel_prefix in kernel_prefixes:
-                for kernel_dir in kernel_dirs:
+            for kernel_prefix in self.kernel_prefixes:
+                for kernel_dir in self.kernel_dirs:
                     kernel_names.append(
                         kernel_name_pattern.format(
                             prefix=kernel_prefix, name=kernel_dir
