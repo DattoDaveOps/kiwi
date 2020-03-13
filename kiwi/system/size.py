@@ -78,7 +78,7 @@ class SystemSize:
                 exclude_options.append(item)
         du_call = Command.run(
             [
-                'du', '-s', '--apparent-size', '--block-size', '1'
+                'du', '-xs', '--apparent-size', '--block-size', '1'
             ] + exclude_options + [
                 self.source_dir
             ]
