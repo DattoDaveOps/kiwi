@@ -61,7 +61,7 @@ class SystemSize:
 
         return int(size)
 
-    def accumulate_mbyte_file_sizes(self, exclude=None):
+    def accumulate_mbyte_file_sizes(self, exclude=['/sys', '/dev', '/proc']):
         """
         Calculate data size of all data in the source tree
 
